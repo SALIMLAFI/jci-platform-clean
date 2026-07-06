@@ -1,0 +1,155 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+/*
+  PALETTE DE MARQUE
+  ─────────────────────────────────────────────────────────────────
+  Primaire   #1F4789  — Bleu marine  (PMS 2728 C)
+  Accent     #57BCBC  — Teal         (PMS 3265 C)
+  Highlight  #EFC40F  — Or soleil    (PMS 142 C)
+
+  Complémentaires dérivées
+  ─────────────────────────────────────────────────────────────────
+  Primaire clair    #2E5EA8  — bleu intermédiaire (hover / focus)
+  Primaire sombre   #142E5E  — bleu très foncé (sidebar, textes forts)
+  Teal clair        #7ECDCD  — teal pastel (badges, tags, fonds légers)
+  Teal sombre       #3A9090  — teal profond (hover accent)
+  Or clair          #F7DC6F  — jaune doux (highlight sur fond sombre)
+  Or sombre         #B8960B  — or foncé (bordures, états actifs warning)
+
+  Neutres
+  ─────────────────────────────────────────────────────────────────
+  Fond clair        #F7F9FC  — blanc bleuté très doux
+  Fond sombre       #0D1320  — quasi-noir bleuté
+  Card sombre       #16202E  — card sur fond sombre
+  Texte foncé       #0F1D33  — marine très sombre (lisibilité max)
+  Texte atténué     #5A6A82  — gris bleuté (muted)
+*/
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --font-sans: var(--font-geist-sans), 'Geist Fallback';
+  --font-mono: var(--font-geist-mono), 'Geist Mono Fallback';
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Tokens de marque exposés en Tailwind */
+  --color-brand-primary: #1F4789;
+  --color-brand-primary-light: #2E5EA8;
+  --color-brand-primary-dark: #142E5E;
+  --color-brand-teal: #57BCBC;
+  --color-brand-teal-light: #7ECDCD;
+  --color-brand-teal-dark: #3A9090;
+  --color-brand-gold: #EFC40F;
+  --color-brand-gold-light: #F7DC6F;
+  --color-brand-gold-dark: #B8960B;
+}
+
+/* ─── MODE CLAIR ──────────────────────────────────────────────── */
+:root {
+  color-scheme: light;
+
+  /* Fonds */
+  --background: #F7F9FC;
+  --card: #FFFFFF;
+  --popover: #FFFFFF;
+
+  /* Textes */
+  --foreground: #0F1D33;
+  --card-foreground: #0F1D33;
+  --popover-foreground: #0F1D33;
+
+  /* Primaire — bleu marine */
+  --primary: #1F4789;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondaire — gris bleuté très clair */
+  --secondary: #E8EDF5;
+  --secondary-foreground: #0F1D33;
+
+  /* Muted */
+  --muted: #EEF1F7;
+  --muted-foreground: #5A6A82;
+
+  /* Accent — teal */
+  --accent: #57BCBC;
+  --accent-foreground: #FFFFFF;
+
+  /* Destructif */
+  --destructive: #C0392B;
+
+  /* Bordures & inputs */
+  --border: #D0D8E8;
+  --input: #D0D8E8;
+  --ring: #1F4789;
+
+  /* Charts : bleu → teal → or → bleu clair → teal sombre */
+  --chart-1: #1F4789;
+  --chart-2: #57BCBC;
+  --chart-3: #EFC40F;
+  --chart-4: #2E5EA8;
+  --chart-5: #3A9090;
+
+  /* Rayon global */
+  --radius: 0.625rem;
+
+  /* Sidebar */
+  --sidebar: #142E5E;
+  --sidebar-foreground: #E8EDF5;
+  --sidebar-primary: #EFC40F;
+  --sidebar-primary-foreground: #142E5E;
+  --sidebar-accent: #1F4789;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #0D1320;
+  --sidebar-ring: #57BCBC;
+}
+
+/* ─── BASE ────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
