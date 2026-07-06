@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchApi } from '@/lib/apiClient';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, ArrowLeft, CheckCircle, ShieldCheck, CircleUserRound } from 'lucide-react';
 import { AuthPageShell } from '@/components/auth-page-shell';
 
-export default function CompletePasswordPage() {
+function CompletePasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [password, setPassword] = useState('');
@@ -16,13 +16,18 @@ export default function CompletePasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (!token) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !token) {
       router.push('/login');
     }
-  }, [token, router]);
+  }, [token, router, mounted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +57,10 @@ export default function CompletePasswordPage() {
       setLoading(false);
     }
   };
+
+  if (!mounted) {
+    return null;
+  }
 
   if (!token) {
     return null;
@@ -99,7 +108,7 @@ export default function CompletePasswordPage() {
         <p className="text-sm font-semibold uppercase tracking-[0.28em] text-brand-primary">Compte Google détecté</p>
         <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Créez votre mot de passe local</h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Cette étape complète votre compte JCI Ledger pour vous permettre d’ouvrir une session avec votre email et votre mot de passe, en plus de Google.
+          Cette étape complète votre compte JCI Ledger pour vous permettre d'ouvrir une session avec votre email et votre mot de passe, en plus de Google.
         </p>
       </motion.div>
 
@@ -190,5 +199,13 @@ export default function CompletePasswordPage() {
         </motion.div>
       )}
     </AuthPageShell>
+  );
+}
+
+export default function CompletePasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <CompletePasswordContent />
+    </Suspense>
   );
 }
