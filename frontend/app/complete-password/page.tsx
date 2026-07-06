@@ -7,6 +7,10 @@ import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, ArrowLeft, CheckCircle, ShieldCheck, CircleUserRound, Loader2 } from 'lucide-react';
 import { AuthPageShell } from '@/components/auth-page-shell';
 
+// Force dynamic rendering to prevent prerendering errors with useSearchParams
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
+
 function CompletePasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
