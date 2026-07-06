@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchApi } from '@/lib/apiClient';
 import { motion } from 'framer-motion';
-import { Lock, Eye, EyeOff, ArrowLeft, CheckCircle, ShieldCheck, CircleUserRound } from 'lucide-react';
+import { Lock, Eye, EyeOff, ArrowLeft, CheckCircle, ShieldCheck, CircleUserRound, Loader2 } from 'lucide-react';
 import { AuthPageShell } from '@/components/auth-page-shell';
 
 function CompletePasswordContent() {
@@ -58,12 +58,64 @@ function CompletePasswordContent() {
     }
   };
 
+  // Show loading state while mounting
   if (!mounted) {
-    return null;
+    return (
+      <AuthPageShell
+        badge="Compte Google"
+        subtitle="Création de mot de passe local"
+        title="Ce compte est lié à Google"
+        description="Définissez un mot de passe local pour compléter votre accès à JCI Ledger tout en conservant la connexion Google."
+        highlights={[
+          {
+            icon: <CircleUserRound className="h-5 w-5" />,
+            title: 'Connexion Google conservée',
+            description: 'Votre compte reste relié à Google pour les accès rapides et sécurisés.',
+            accentClass: 'from-brand-primary to-brand-primary-light',
+          },
+          {
+            icon: <ShieldCheck className="h-5 w-5" />,
+            title: 'Accès local activé',
+            description: 'Ajoutez un mot de passe local pour accéder aussi avec email et mot de passe.',
+            accentClass: 'from-brand-teal to-brand-teal-dark',
+          },
+        ]}
+      >
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+        </div>
+      </AuthPageShell>
+    );
   }
 
+  // Redirect if no token (handled by useEffect, but return loading state)
   if (!token) {
-    return null;
+    return (
+      <AuthPageShell
+        badge="Compte Google"
+        subtitle="Création de mot de passe local"
+        title="Ce compte est lié à Google"
+        description="Définissez un mot de passe local pour compléter votre accès à JCI Ledger tout en conservant la connexion Google."
+        highlights={[
+          {
+            icon: <CircleUserRound className="h-5 w-5" />,
+            title: 'Connexion Google conservée',
+            description: 'Votre compte reste relié à Google pour les accès rapides et sécurisés.',
+            accentClass: 'from-brand-primary to-brand-primary-light',
+          },
+          {
+            icon: <ShieldCheck className="h-5 w-5" />,
+            title: 'Accès local activé',
+            description: 'Ajoutez un mot de passe local pour accéder aussi avec email et mot de passe.',
+            accentClass: 'from-brand-teal to-brand-teal-dark',
+          },
+        ]}
+      >
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+        </div>
+      </AuthPageShell>
+    );
   }
 
   return (
@@ -202,9 +254,38 @@ function CompletePasswordContent() {
   );
 }
 
+function LoadingState() {
+  return (
+    <AuthPageShell
+      badge="Compte Google"
+      subtitle="Création de mot de passe local"
+      title="Ce compte est lié à Google"
+      description="Définissez un mot de passe local pour compléter votre accès à JCI Ledger tout en conservant la connexion Google."
+      highlights={[
+        {
+          icon: <CircleUserRound className="h-5 w-5" />,
+          title: 'Connexion Google conservée',
+          description: 'Votre compte reste relié à Google pour les accès rapides et sécurisés.',
+          accentClass: 'from-brand-primary to-brand-primary-light',
+        },
+        {
+          icon: <ShieldCheck className="h-5 w-5" />,
+          title: 'Accès local activé',
+          description: 'Ajoutez un mot de passe local pour accéder aussi avec email et mot de passe.',
+          accentClass: 'from-brand-teal to-brand-teal-dark',
+        },
+      ]}
+    >
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+      </div>
+    </AuthPageShell>
+  );
+}
+
 export default function CompletePasswordPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<LoadingState />}>
       <CompletePasswordContent />
     </Suspense>
   );
