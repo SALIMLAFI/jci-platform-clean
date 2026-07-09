@@ -50,10 +50,12 @@ export default function RootLayout({
         <SessionProvider>
           <UserProvider>
             {children}
-            {process.env.NODE_ENV === 'production' && <Analytics />}
+            {/* Vercel Analytics temporairement désactivé pour éviter l'erreur 404 */}
+            {/* process.env.NODE_ENV === 'production' && <Analytics /> */}
           </UserProvider>
         </SessionProvider>
       </body>
     </html>
   )
 }
+
