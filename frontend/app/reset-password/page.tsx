@@ -1,62 +1,13 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { fetchApi } from '@/lib/apiClient';
-import { motion } from 'framer-motion';
-import { Lock, Eye, EyeOff, ArrowLeft, CheckCircle, LayoutDashboard, ShieldCheck } from 'lucide-react';
+import { Suspense } from 'react';
+import { ResetPasswordClient } from './ResetPasswordClient';
 import { AuthPageShell } from '@/components/auth-page-shell';
+import { LayoutDashboard, ShieldCheck, Loader2 } from 'lucide-react';
 
-export default function ResetPasswordPage() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const router = useRouter();
+// Force dynamic rendering to prevent prerendering errors
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
 
-  useEffect(() => {
-    if (!token) {
-      router.push('/login');
-    }
-  }, [token, router]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      await fetchApi('/auth/reset-password', {
-        method: 'POST',
-        body: JSON.stringify({ token, password }),
-      });
-      setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la réinitialisation');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!token) {
-    return null;
-  }
-
+function LoadingState() {
   return (
     <AuthPageShell
       badge="Sécurité"
@@ -78,117 +29,17 @@ export default function ResetPasswordPage() {
         },
       ]}
     >
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <button
-          type="button"
-          onClick={() => router.push('/login')}
-          className="inline-flex items-center gap-2 text-sm font-medium text-brand-primary transition-colors hover:text-brand-primary-light"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour
-        </button>
-        <div className="h-2 w-2 rounded-full bg-brand-gold" />
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
       </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45 }}
-        className="mb-6"
-      >
-        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-brand-primary">Nouveau mot de passe</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">Réinitialisez votre accès</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Choisissez un mot de passe fort pour sécuriser votre compte.
-        </p>
-      </motion.div>
-
-      {!success ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Nouveau mot de passe</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full rounded-2xl border border-border bg-background pl-12 pr-12 py-4 text-foreground placeholder:text-muted-foreground outline-none transition-all duration-300 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-brand-primary"
-              >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Confirmer le mot de passe</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className="w-full rounded-2xl border border-border bg-background pl-12 pr-4 py-4 text-foreground placeholder:text-muted-foreground outline-none transition-all duration-300 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20"
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-primary to-brand-teal px-4 py-4 font-semibold text-white shadow-lg shadow-brand-primary/20 transition-all duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? (
-              <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white"
-                />
-                Réinitialisation...
-              </>
-            ) : (
-              'Réinitialiser le mot de passe'
-            )}
-          </button>
-        </form>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4 text-center"
-        >
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-teal/15 text-brand-teal">
-            <CheckCircle className="h-8 w-8" />
-          </div>
-          <h3 className="text-xl font-semibold text-foreground">Mot de passe réinitialisé</h3>
-          <p className="text-sm leading-6 text-muted-foreground">
-            Votre mot de passe a été modifié avec succès.
-          </p>
-          <button
-            type="button"
-            onClick={() => router.push('/login')}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-primary to-brand-teal px-4 py-3 font-semibold text-white transition-all duration-300 hover:brightness-110"
-          >
-            Se connecter
-          </button>
-        </motion.div>
-      )}
     </AuthPageShell>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <ResetPasswordClient />
+    </Suspense>
   );
 }
