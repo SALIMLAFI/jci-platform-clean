@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Sidebar } from '@/components/sidebar';
 import { Header } from '@/components/header';
+import { Loader2 } from 'lucide-react';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -64,7 +65,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   }, [session, status, router]);
 
-  if (status === 'loading' || !isAuthenticated) return null;
+  // Show loading state instead of null to prevent 404
+  if (status === 'loading' || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background min-h-screen">

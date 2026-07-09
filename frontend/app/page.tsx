@@ -7,6 +7,7 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 import { KPICards } from '@/components/kpi-cards';
 import { Charts } from '@/components/charts';
 import { TransactionFeed, QuickActions } from '@/components/transaction-feed';
+import { Loader2 } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -42,8 +43,13 @@ export default function DashboardPage() {
     setCheckedRole(true);
   }, [router, session, status]);
 
+  // Show loading state instead of null to prevent 404
   if (!checkedRole && status !== 'loading') {
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-primary" />
+      </div>
+    );
   }
 
   return (

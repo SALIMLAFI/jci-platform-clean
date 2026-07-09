@@ -6,6 +6,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Ensure proper routing for Vercel
+  output: 'standalone',
+  serverExternalPackages: [],
 }
 
 export default nextConfig
