@@ -5,7 +5,6 @@ import { CircleUserRound, ShieldCheck, Loader2 } from 'lucide-react';
 
 // Force dynamic rendering to prevent prerendering errors
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
 
 function LoadingState() {
   return (
