@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { fetchApi } from '@/lib/apiClient';
@@ -17,6 +17,7 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('member');
   const [membershipDate, setMembershipDate] = useState('');
   const [error, setError] = useState('');
@@ -26,16 +27,46 @@ export default function SignupPage() {
   const [recaptchaToken, setRecaptchaToken] = useState('');
   const router = useRouter();
 
+  const nameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const confirmPasswordRef = useRef<HTMLInputElement>(null);
+
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError('');
+
+    // --- Contrôle de Saisie (Logique Métier) ---
+    if (name.trim().length < 3) {
+      setError('Le nom complet doit contenir au moins 3 caractères.');
+      nameRef.current?.focus();
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError('L\'adresse email saisie n\'est pas au bon format.');
+      emailRef.current?.focus();
+      return;
+    }
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!strongPasswordRegex.test(password)) {
+      setError('Le mot de passe doit faire au moins 8 caractères, inclure une majuscule, une minuscule, un chiffre et un caractère spécial.');
+      passwordRef.current?.focus();
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas.');
+      confirmPasswordRef.current?.focus();
+      return;
+    }
     if (!recaptchaToken) {
       setError('Veuillez compléter le reCAPTCHA');
       return;
     }
+    // ------------------------------------------
     
     setLoading(true);
-    setError('');
 
     try {
       const data = await fetchApi('/auth', {
@@ -56,6 +87,14 @@ export default function SignupPage() {
 
   const handleRecaptcha = (token: string) => {
     setRecaptchaToken(token);
+    setError(''); // Clear error if recaptcha was the issue
+  };
+
+  const resetRecaptcha = () => {
+    setRecaptchaToken('');
+    if (window.grecaptcha) {
+      window.grecaptcha.reset();
+    }
   };
 
   const handleGoogleSignIn = async () => {
@@ -158,7 +197,7 @@ export default function SignupPage() {
         </p>
       </motion.div>
 
-      <form onSubmit={handleSignup} className="space-y-5">
+      <form onSubmit={handleSignup} noValidate className="space-y-5">
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Nom complet</label>
           <div className="relative">
@@ -166,6 +205,7 @@ export default function SignupPage() {
               <User className="w-5 h-5" />
             </div>
             <input
+              ref={nameRef}
               type="text"
               placeholder="Ex : Prénom Nom"
               value={name}
@@ -185,6 +225,7 @@ export default function SignupPage() {
               <Mail className="w-5 h-5" />
             </div>
             <input
+              ref={emailRef}
               type="email"
               placeholder="prenom.nom@jci.tn"
               value={email}
@@ -204,6 +245,7 @@ export default function SignupPage() {
               <Lock className="w-5 h-5" />
             </div>
             <input
+              ref={passwordRef}
               type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
               value={password}
@@ -213,6 +255,34 @@ export default function SignupPage() {
               required
               className={`w-full rounded-2xl border bg-background pl-12 pr-12 py-4 text-foreground placeholder:text-muted-foreground outline-none transition-all duration-300 ${focusedField === 'password' ? 'border-brand-primary ring-2 ring-brand-primary/20' : 'border-border hover:border-brand-primary/40'}`}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-brand-primary"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">Confirmer le mot de passe</label>
+          <div className="relative">
+            <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${focusedField === 'confirmPassword' ? 'text-brand-primary' : 'text-muted-foreground'}`}>
+              <Lock className="w-5 h-5" />
+            </div>
+            <input
+              ref={confirmPasswordRef}
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              onFocus={() => setFocusedField('confirmPassword')}
+              onBlur={() => setFocusedField(null)}
+              required
+              className={`w-full rounded-2xl border bg-background pl-12 pr-12 py-4 text-foreground placeholder:text-muted-foreground outline-none transition-all duration-300 ${focusedField === 'confirmPassword' ? 'border-brand-primary ring-2 ring-brand-primary/20' : 'border-border hover:border-brand-primary/40'}`}
+            />
+
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -293,12 +363,19 @@ export default function SignupPage() {
           </div>
         )}
 
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-2">
           <div
             className="g-recaptcha"
             data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
             data-callback="handleRecaptcha"
           ></div>
+          <button
+            type="button"
+            onClick={resetRecaptcha}
+            className="text-xs text-muted-foreground hover:text-brand-primary transition-colors"
+          >
+            Le reCAPTCHA ne s'affiche pas ? Actualiser
+          </button>
         </div>
 
         <button

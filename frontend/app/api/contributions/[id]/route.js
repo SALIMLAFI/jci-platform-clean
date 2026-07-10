@@ -19,15 +19,18 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
 
-    const contribution = await Contribution.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
+    const contribution = await Contribution.findById(id);
 
     if (!contribution) {
       return NextResponse.json({ error: "Contribution not found" }, { status: 404 });
     }
+
+    if (contribution.status !== "pending") {
+      return NextResponse.json({ error: "Cette cotisation a déjà été traitée." }, { status: 400 });
+    }
+
+    contribution.status = status;
+    await contribution.save();
 
     return NextResponse.json({ success: true, contribution });
   } catch (error) {

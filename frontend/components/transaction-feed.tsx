@@ -100,6 +100,8 @@ export function QuickActions() {
   const [description, setDescription] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
+  const [error, setError] = useState('');
+
   const handleUpload = async () => {
     if (!file) throw new Error("Le justificatif est obligatoire.");
     const formData = new FormData();
@@ -115,17 +117,35 @@ export function QuickActions() {
 
   const handlePayContribution = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    // --- Contrôle de Saisie (Logique Métier) ---
+    const parsedAmount = parseFloat(amount.replace(',', '.'));
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setError('Veuillez entrer un montant valide supérieur à 0.');
+      return;
+    }
+    if (!file) {
+      setError('Veuillez sélectionner un fichier justificatif.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('La taille du fichier ne doit pas dépasser 5 Mo.');
+      return;
+    }
+    // ------------------------------------------
+
     setLoading(true);
     try {
       const proofUrl = await handleUpload();
       await fetchApi('/contributions', {
         method: 'POST',
-        body: JSON.stringify({ amount: Number(amount), proof: proofUrl }),
+        body: JSON.stringify({ amount: parsedAmount, proof: proofUrl }),
       });
       setContribOpen(false);
       window.location.reload(); 
-    } catch (error) {
-      alert("Erreur lors de la soumission de la cotisation.");
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de la soumission de la cotisation.");
     } finally {
       setLoading(false);
     }
@@ -161,17 +181,15 @@ export function QuickActions() {
             </div>
           </div>
 
-          <form onSubmit={handlePayContribution} className="space-y-6 px-6 py-6">
+          <form onSubmit={handlePayContribution} noValidate className="space-y-6 px-6 py-6">
             <div className="space-y-2">
               <Label className="text-sm font-medium text-foreground">Montant payé (TND)</Label>
               <Input
                 type="text"
                 inputMode="decimal"
-                pattern="^[0-9]+([.,][0-9]{1,2})?$"
-                required
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
-                placeholder="Ex: 125 ou 125,50"
+                placeholder="Ex: 125 ou 125.50"
                 className="h-12 rounded-xl border-2 border-border bg-background px-4 text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10"
               />
             </div>
@@ -180,14 +198,20 @@ export function QuickActions() {
               <Label className="text-sm font-medium text-foreground">Justificatif de paiement</Label>
               <Input
                 type="file"
-                required
+                accept="image/*,.pdf"
                 onChange={e => setFile(e.target.files?.[0] || null)}
-                className="h-12 rounded-xl border-2 border-border bg-background px-4 text-foreground outline-none transition-all file:mr-4 file:rounded-lg file:border-0 file:bg-brand-primary/10 file:px-4 file:py-2 file:text-sm file:font-medium file:text-brand-primary hover:file:bg-brand-primary/15 focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10"
+                className="p-2.5 rounded-xl border-2 border-border bg-background text-foreground outline-none transition-all file:mr-4 file:rounded-lg file:border-0 file:bg-brand-primary/10 file:px-4 file:py-1 file:text-sm file:font-medium file:text-brand-primary hover:file:bg-brand-primary/15 focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10"
               />
               <p className="text-xs text-muted-foreground">
-                Formats acceptés: reçu bancaire, capture de virement ou document PDF lisible.
+                Formats acceptés: reçu bancaire, capture de virement ou document PDF lisible (Max: 5Mo).
               </p>
             </div>
+
+            {error && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive font-medium">
+                {error}
+              </div>
+            )}
 
             <div className="rounded-xl border border-brand-primary/20 bg-brand-primary/5 px-4 py-3 text-sm text-muted-foreground">
               Le paiement sera enregistré comme <span className="font-medium text-foreground">en attente</span> jusqu’à validation.

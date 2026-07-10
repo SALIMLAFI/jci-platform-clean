@@ -26,14 +26,33 @@ export async function POST(request) {
   try {
     const { amount, date, description, projectId, proof } = await request.json();
 
-    if (!amount || !description || !proof) {
-      return NextResponse.json({ error: "Amount, description, and proof are required" }, { status: 400 });
+    const numAmount = Number(amount);
+    if (!amount || !description || !proof || !date) {
+      return NextResponse.json({ error: "Le montant, la description, la date et le justificatif sont obligatoires." }, { status: 400 });
+    }
+    if (isNaN(numAmount) || numAmount <= 0) {
+      return NextResponse.json({ error: "Le montant de la dépense doit être strictement positif." }, { status: 400 });
+    }
+
+    // Anti-doublon basique (même jour, même description, même montant)
+    const expenseDate = new Date(date);
+    const startOfDay = new Date(expenseDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(expenseDate.setHours(23, 59, 59, 999));
+    
+    const duplicate = await Expense.findOne({
+      amount: numAmount,
+      description: description.trim(),
+      date: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    if (duplicate) {
+      return NextResponse.json({ error: "Une dépense identique existe déjà pour cette journée (doublon possible)." }, { status: 409 });
     }
 
     const expense = await Expense.create({
-      amount,
-      date: date || Date.now(),
-      description,
+      amount: numAmount,
+      date: date,
+      description: description.trim(),
       projectId: projectId || null,
       proof,
     });
@@ -51,16 +70,20 @@ export async function PUT(request) {
   try {
     const { id, amount, date, description, projectId, proof } = await request.json();
 
-    if (!id || !amount || !description || !proof) {
-      return NextResponse.json({ error: "Id, amount, description, and proof are required" }, { status: 400 });
+    const numAmount = Number(amount);
+    if (!id || !amount || !description || !proof || !date) {
+      return NextResponse.json({ error: "Id, montant, date, description et justificatif sont obligatoires." }, { status: 400 });
+    }
+    if (isNaN(numAmount) || numAmount <= 0) {
+      return NextResponse.json({ error: "Le montant de la dépense doit être strictement positif." }, { status: 400 });
     }
 
     const expense = await Expense.findByIdAndUpdate(
       id,
       {
-        amount,
-        date: date || Date.now(),
-        description,
+        amount: numAmount,
+        date: date,
+        description: description.trim(),
         projectId: projectId || null,
         proof,
       },

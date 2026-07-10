@@ -26,7 +26,7 @@ export async function GET(request) {
         modules = ["dashboard", "contributions", "expenses", "reports"];
         break;
       case "director":
-        modules = ["dashboard", "expenses", "reports"];
+        modules = ["dashboard", "expenses", "reports", "projects"];
         break;
       case "admin":
         modules = ["dashboard", "members", "contributions", "expenses", "reports", "projects", "settings"];

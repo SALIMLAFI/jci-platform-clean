@@ -42,15 +42,33 @@ export async function POST(request) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
       }
 
+      const cleanName = name.trim();
+      const cleanEmail = email.trim().toLowerCase();
+      
+      if (cleanName.length < 3) {
+        return NextResponse.json({ error: "Le nom doit contenir au moins 3 caractères." }, { status: 400 });
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        return NextResponse.json({ error: "Adresse email invalide." }, { status: 400 });
+      }
+
+      const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      // Note: we updated the regex to force special character as requested in the prompt.
+      if (!strongPasswordRegex.test(password)) {
+        return NextResponse.json({ error: "Le mot de passe doit faire au moins 8 caractères, inclure une majuscule, une minuscule, un chiffre et un caractère spécial." }, { status: 400 });
+      }
+
       // Check if user exists
-      const existingUser = await User.findOne({ email });
+      const existingUser = await User.findOne({ email: cleanEmail });
       if (existingUser) {
         // Allow a Google-created account to be completed with a password
         if (!existingUser.password) {
           const salt = await bcrypt.genSalt(10);
           const hashedPassword = await bcrypt.hash(password, salt);
 
-          existingUser.name = name;
+          existingUser.name = cleanName;
           existingUser.password = hashedPassword;
           existingUser.role = role || existingUser.role || "member";
           existingUser.membershipDate = membershipDate || existingUser.membershipDate || new Date();
@@ -74,8 +92,8 @@ export async function POST(request) {
       const hashedPassword = await bcrypt.hash(password, salt);
 
       const newUser = await User.create({
-        name,
-        email,
+        name: cleanName,
+        email: cleanEmail,
         password: hashedPassword,
         role: role || "member",
         membershipDate: membershipDate || new Date(),
@@ -95,17 +113,18 @@ export async function POST(request) {
     
     // Handle Login
     if (action === "login") {
-      console.log('[API /auth login] Login attempt for email:', email);
+      const cleanEmail = email ? email.trim().toLowerCase() : '';
+      console.log('[API /auth login] Login attempt for email:', cleanEmail);
       
-      if (!email || !password) {
+      if (!cleanEmail || !password) {
         console.log('[API /auth login] Missing email or password');
         return NextResponse.json({ error: "Missing email or password" }, { status: 400 });
       }
 
-      const user = await User.findOne({ email });
+      const user = await User.findOne({ email: cleanEmail });
       if (!user) {
-        console.log('[API /auth login] User not found for email:', email);
-        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+        console.log('[API /auth login] User not found for email:', cleanEmail);
+        return NextResponse.json({ error: "Identifiants incorrects" }, { status: 401 });
       }
 
       if (user.hasLocalPassword === false || !user.password) {
@@ -118,8 +137,8 @@ export async function POST(request) {
       console.log('[API /auth login] User found, comparing password');
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        console.log('[API /auth login] Password mismatch for email:', email);
-        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+        console.log('[API /auth login] Password mismatch for email:', cleanEmail);
+        return NextResponse.json({ error: "Identifiants incorrects" }, { status: 401 });
       }
 
       console.log('[API /auth login] Password match, generating token');

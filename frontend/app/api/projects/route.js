@@ -24,17 +24,27 @@ export async function POST(request) {
 
   try {
     const { name, description, directorId, startDate, endDate, budget, status, priority } = await request.json();
-    if (!name) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    if (!name || name.trim() === "") {
+      return NextResponse.json({ error: "Le nom du projet est obligatoire" }, { status: 400 });
+    }
+    const cleanName = name.trim();
+    const numBudget = budget ? parseFloat(budget) : 0;
+    if (numBudget < 0) {
+      return NextResponse.json({ error: "Le budget ne peut pas être négatif" }, { status: 400 });
+    }
+
+    const existing = await Project.findOne({ name: cleanName });
+    if (existing) {
+      return NextResponse.json({ error: "Un projet avec ce nom existe déjà" }, { status: 409 });
     }
 
     // Build project data - only include directorId if it's provided and not empty
     const projectData = { 
-      name, 
+      name: cleanName, 
       description,
       startDate: startDate || null,
       endDate: endDate || null,
-      budget: budget ? parseFloat(budget) : 0,
+      budget: numBudget,
       status: status || 'planning',
       priority: priority || 'medium'
     };
@@ -58,16 +68,26 @@ export async function PUT(request) {
 
   try {
     const { id, name, description, directorId, startDate, endDate, budget, status, priority } = await request.json();
-    if (!id || !name) {
-      return NextResponse.json({ error: "Missing project id or name" }, { status: 400 });
+    if (!id || !name || name.trim() === "") {
+      return NextResponse.json({ error: "L'id et le nom du projet sont obligatoires" }, { status: 400 });
+    }
+    const cleanName = name.trim();
+    const numBudget = budget ? parseFloat(budget) : 0;
+    if (numBudget < 0) {
+      return NextResponse.json({ error: "Le budget ne peut pas être négatif" }, { status: 400 });
+    }
+
+    const existing = await Project.findOne({ name: cleanName, _id: { $ne: id } });
+    if (existing) {
+      return NextResponse.json({ error: "Un projet avec ce nom existe déjà" }, { status: 409 });
     }
 
     const projectData = { 
-      name, 
+      name: cleanName, 
       description: description || "",
       startDate: startDate || null,
       endDate: endDate || null,
-      budget: budget ? parseFloat(budget) : 0,
+      budget: numBudget,
       status: status || 'planning',
       priority: priority || 'medium'
     };

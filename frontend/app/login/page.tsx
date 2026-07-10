@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 import { fetchApi } from '@/lib/apiClient';
@@ -23,6 +23,9 @@ export default function LoginPage() {
   const [recaptchaToken, setRecaptchaToken] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
+
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
   const { data: session, status } = useSession();
 
   // Redirect if already authenticated via NextAuth
@@ -35,14 +38,27 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError('');
+
+    // --- Contrôle de Saisie ---
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError('Veuillez entrer une adresse email valide.');
+      emailRef.current?.focus();
+      return;
+    }
+    if (!password) {
+      setError('Veuillez entrer votre mot de passe.');
+      passwordRef.current?.focus();
+      return;
+    }
     if (!recaptchaToken) {
       setError('Veuillez compléter le reCAPTCHA');
       return;
     }
+    // --------------------------
     
     setLoading(true);
-    setError('');
 
     try {
       console.log('[LoginPage] Attempting login with email:', email);
@@ -74,6 +90,14 @@ export default function LoginPage() {
 
   const handleRecaptcha = (token: string) => {
     setRecaptchaToken(token);
+    setError('');
+  };
+
+  const resetRecaptcha = () => {
+    setRecaptchaToken('');
+    if (window.grecaptcha) {
+      window.grecaptcha.reset();
+    }
   };
 
   const handleGoogleSignIn = async () => {
@@ -169,7 +193,7 @@ export default function LoginPage() {
         </p>
       </motion.div>
 
-      <form onSubmit={handleLogin} className="space-y-5">
+      <form onSubmit={handleLogin} noValidate className="space-y-5">
         <div className="space-y-2">
           <label className="text-sm font-medium text-foreground">Adresse email</label>
           <div className="relative">
@@ -177,6 +201,7 @@ export default function LoginPage() {
               <Mail className="w-5 h-5" />
             </div>
             <input
+              ref={emailRef}
               type="email"
               placeholder="votre.email@jci.tn"
               value={email}
@@ -196,6 +221,7 @@ export default function LoginPage() {
               <Lock className="w-5 h-5" />
             </div>
             <input
+              ref={passwordRef}
               type={showPassword ? 'text' : 'password'}
               placeholder="••••••••"
               value={password}
@@ -264,12 +290,19 @@ export default function LoginPage() {
           </div>
         )}
 
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-2">
           <div
             className="g-recaptcha"
             data-sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
             data-callback="handleRecaptcha"
           ></div>
+          <button
+            type="button"
+            onClick={resetRecaptcha}
+            className="text-xs text-muted-foreground hover:text-brand-primary transition-colors"
+          >
+            Le reCAPTCHA ne s'affiche pas ? Actualiser
+          </button>
         </div>
 
         <button
